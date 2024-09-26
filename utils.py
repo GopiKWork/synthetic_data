@@ -30,28 +30,24 @@ def get_engine_data(file_name='train_FD002.txt'):
 
 def kld(original_df,synthetic_df):
     epsilon = 1e-8
-    # Convert data arrays to PyTorch tensors
     original_data_tensor = torch.tensor(original_df.values, dtype=torch.float32)
     synthetic_data_tensor = torch.tensor(synthetic_df.values, dtype=torch.float32)    
     
-    # Calculate KL divergence for each column
+    # calc KL divergence for each column
     kl_divs = []
     for col in range(len(reqd_cols)):
-        # Extract the column data
+
         synthetic_col = synthetic_data_tensor[:, col]
         original_col = original_data_tensor[:, col]
     
-        # Calculate the mean and standard deviation for each column
         synthetic_mean = torch.mean(synthetic_col)
         synthetic_std = torch.std(synthetic_col) + epsilon
         original_mean = torch.mean(original_col)
         original_std = torch.std(original_col) + epsilon
     
-        # Create Normal distributions for each column
         synthetic_dist = Normal(synthetic_mean, synthetic_std)
         original_dist = Normal(original_mean, original_std)
     
-        # Calculate the KL divergence
         kl_div = kl_divergence(synthetic_dist, original_dist).item()
         kl_divs.append({reqd_cols[col]:kl_div})
     return kl_divs
@@ -80,7 +76,7 @@ def kld_mean(original_df, synthetic_df):
     divergences = [list(kl_div.values())[0] for kl_div in klds]
     scaler = RobustScaler()
     divergences = scaler.fit_transform(np.array(divergences).reshape(-1, 1)).flatten()
-    divergences = np.clip(divergences, None, np.percentile(divergences, 95)) ##winsorized_- clip after 80th %
+    divergences = np.clip(divergences, None, np.percentile(divergences, 95)) ##winsorized_- clip after 95th %
     mean_divergence = sum(divergences) / len(divergences)
     return mean_divergence
 
